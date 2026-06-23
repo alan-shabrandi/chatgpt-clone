@@ -23,33 +23,28 @@ const ChatArea = () => {
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
 
-    try {
-      const response = await fetch("http://localhost:8000/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
+    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+
+    const response = await fetch("http://localhost:8000/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: input }),
+    });
+
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader!.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      setMessages((prev) => {
+        const newMessages = [...prev];
+        newMessages[newMessages.length - 1].content += chunk;
+        return newMessages;
       });
-      if (!response.ok) throw new Error("Failed to fetch");
-
-      const data = await response.json();
-
-      const aiResponse = { role: "assistant", content: data.reply };
-      setMessages((prev) => [...prev, aiResponse]);
-    } catch (error) {
-      console.log("Error connecting to FastAPI", error);
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistent", content: "خطا در اتصال به سرور." },
-      ]);
     }
-
-    setTimeout(() => {
-      const aiResponse = {
-        role: "assistant",
-        content: "من یک هوش مصنوعی هستم! (در مراحل بعدی به FastAPI وصل می‌شوم)",
-      };
-      setMessages((prev) => [...prev, aiResponse]);
-    }, 1000);
   };
   return (
     <main className="flex-1 flex flex-col">
