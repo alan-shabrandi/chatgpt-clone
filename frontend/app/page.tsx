@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Send, Bot, User } from "lucide-react";
 
 export default function Home() {
   const [messages, setMessages] = useState<{ role: string; content: string }[]>(
@@ -35,13 +36,23 @@ export default function Home() {
           {messages.map((msg, index) => (
             <div
               key={index}
-              className={`p-4 rounded-lg max-w-[80%] ${
-                msg.role === "user"
-                  ? "bg-blue-600 ml-auto"
-                  : "bg-gray-700 mr-auto"
-              }`}
+              className={`flex gap-4 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
-              {msg.content}
+              {msg.role === "assistant" && (
+                <div className="p-2 bg-gray-600 rounded-full h-fit">
+                  <Bot size={20} />
+                </div>
+              )}
+              <div
+                className={`p-4 rounded-xl max-w-[80%] ${msg.role === "user" ? "bg-blue-600" : "bg-gray-700"}`}
+              >
+                {msg.content}
+              </div>
+              {msg.role === "user" && (
+                <div className="p-2 bg-blue-700 rounded-full h-fit">
+                  <User size={20} />
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -57,9 +68,9 @@ export default function Home() {
           />
           <button
             onClick={handleSend}
-            className="bg-blue-600 px-4 py-2 rounded"
+            className="bg-blue-600 p-3 rounded-lg hover:bg-blue-700 transition"
           >
-            Send
+            <Send size={20} />
           </button>
         </div>
       </main>
