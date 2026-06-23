@@ -1,13 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Send, Bot, User } from "lucide-react";
-
 export default function Home() {
   const [messages, setMessages] = useState<{ role: string; content: string }[]>(
     [],
   );
   const [input, setInput] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -55,6 +63,7 @@ export default function Home() {
               )}
             </div>
           ))}
+          <div ref={messagesEndRef} />
         </div>
 
         <div className="p-4 border-t border-gray-700 flex gap-2">
