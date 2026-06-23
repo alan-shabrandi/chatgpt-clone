@@ -16,12 +16,32 @@ const ChatArea = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMessage = { role: "user", content: input };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+
+    try {
+      const response = await fetch("http://localhost:8000/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: input }),
+      });
+      if (!response.ok) throw new Error("Failed to fetch");
+
+      const data = await response.json();
+
+      const aiResponse = { role: "assistant", content: data.reply };
+      setMessages((prev) => [...prev, aiResponse]);
+    } catch (error) {
+      console.log("Error connecting to FastAPI", error);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistent", content: "خطا در اتصال به سرور." },
+      ]);
+    }
 
     setTimeout(() => {
       const aiResponse = {
