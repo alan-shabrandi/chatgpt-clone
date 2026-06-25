@@ -39,9 +39,14 @@ const ChatArea = () => {
       if (done) break;
 
       const chunk = decoder.decode(value, { stream: true });
+
       setMessages((prev) => {
         const newMessages = [...prev];
-        newMessages[newMessages.length - 1].content += chunk;
+        const lastIndex = newMessages.length - 1;
+        newMessages[lastIndex] = {
+          ...newMessages[lastIndex],
+          content: newMessages[lastIndex].content + chunk,
+        };
         return newMessages;
       });
     }
