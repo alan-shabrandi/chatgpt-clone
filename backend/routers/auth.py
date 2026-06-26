@@ -45,7 +45,7 @@ async def login(response: Response, form_data: OAuth2PasswordRequestForm = Depen
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         expires=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         samesite="lax",
-        secure=False,  # در پروداکشن (HTTPS) برابر True قرار دهید
+        secure=False,
         path="/"
     )
     return {"message": "Login successful"}

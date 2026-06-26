@@ -12,21 +12,13 @@ export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [checkingAuth, setCheckingAuth] = useState<boolean>(true);
 
-  // بررسی وضعیت لاگین بودن کاربر از طریق یک چک‌آپ ساده با بک‌اند
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        // برای اینکه بفهمیم کوکی معتبر داریم یا نه، یک درخواست تست به بک‌اند می‌زنیم
-        // اگر بک‌اند وضعیت را تایید کرد یعنی لاگین هستیم. (می‌توانید یک اندپوینت ساده /auth/me هم بسازید)
-        const response = await fetch("http://localhost:8000/auth/google", {
-          method: "OPTIONS", // یا هر متد بررسی دیگری، یا گرفتن یک استاتوس کد
+        await fetch(`${process.env.BACKEND_URL}/auth/google`, {
+          method: "OPTIONS",
           credentials: "include",
         });
-
-        // راه ساده‌تر: چون ما از credentials: "include" استفاده می‌کنیم، کنترل لاگین را
-        // می‌توان بر اساس پاسخ اولین درخواست‌ها یا یک استیت سراسری مدیریت کرد.
-        // اینجا فرض می‌کنیم کاربر اگر دفعه قبل لاگین کرده، توکن در کوکی جریان دارد.
-        // برای سادگی، یک فلگ در localStorage فقط برای ظاهر UI نگه می‌داریم:
         const userLoggedFlag = localStorage.getItem("user_logged_in");
         setIsLoggedIn(userLoggedFlag === "true");
       } catch (err) {
@@ -39,19 +31,18 @@ export default function Header() {
     checkAuthStatus();
   }, []);
 
-  // هندل کردن خروج کاربر و پاک کردن کوکی از سمت FastAPI
   const handleSignOut = async () => {
     try {
-      const response = await fetch("http://localhost:8000/logout", {
+      const response = await fetch(`${process.env.BACKEND_URL}/logout`, {
         method: "POST",
-        credentials: "include", // 👈 خیلی مهم: برای اینکه مرورگر اجازه دهد کوکی حذف شود
+        credentials: "include",
       });
 
       if (response.ok) {
-        localStorage.removeItem("user_logged_in"); // پاک کردن فلگ ظاهری
+        localStorage.removeItem("user_logged_in");
         setIsLoggedIn(false);
         router.push("/login");
-        router.refresh(); // رفرش کردن مسیرها برای اعمال میدلورها
+        router.refresh();
       }
     } catch (error) {
       console.error("Logout failed:", error);
@@ -60,7 +51,6 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur supports-backdrop-filter:bg-background/60">
-      {/* سمت چپ: لوگو و عنوان */}
       <div className="flex items-center gap-3">
         <Sparkles className="h-5 w-5 text-primary" />
         <div>
@@ -69,7 +59,6 @@ export default function Header() {
         </div>
       </div>
 
-      {/* سمت راست: دکمه وضعیت احراز هویت */}
       <div className="flex items-center gap-3">
         {checkingAuth ? (
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
