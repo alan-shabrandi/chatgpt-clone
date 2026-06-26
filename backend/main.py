@@ -24,6 +24,7 @@ app = FastAPI(lifespan=lifespan)
 ALLOWED_ORIGINS = [
     "http://localhost:3000",  # برای توسعه لوکال
     "http://127.0.0.1:3000",
+    "https://chatgpt-clone-hazel-nine.vercel.app/"
 ]
 
 # اگر آدرس فرانت‌آند ابری (مثلاً در Vercel) را در متغیرهای محیطی ست کردید، به لیست اضافه می‌شود
