@@ -6,13 +6,14 @@ services:
     container_name: fastapi_db
     restart: always
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: mydb
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+
   web:
     build: .
     container_name: fastapi_app
@@ -20,8 +21,11 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://myuser:mypassword@db:5432/mydb
-      - OLLAMA_BASE_URL=http://host.docker.internal:11434/v1
+      - DATABASE_URL=${DATABASE_URL}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
     depends_on:
       - db
 

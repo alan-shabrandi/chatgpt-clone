@@ -5,7 +5,6 @@ from pypdf import PdfReader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from openai import OpenAI
 
-# خواندن متغیرهای محیطی از داکر
 OLLAMA_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://myuser:mypassword@localhost:5432/mydb")
 
@@ -37,20 +36,24 @@ def extract_and_chunk_pdf(file_path: str, chunk_size: int = 600, chunk_overlap: 
 class SimpleVectorStore:
     def __init__(self, dimension: int = 768):
         self.dimension = dimension
-        # اتصال به دیتابیس PostgreSQL
         self.conn = psycopg2.connect(DATABASE_URL)
         self.create_table()
 
     def create_table(self):
         with self.conn.cursor() as cur:
-            # فعال‌سازی افزونه pgvector در دیتابیس
             cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
-            # ساخت جدول ذخیره‌سازی متن و وکتور (اگر از قبل نباشد)
             cur.execute(f"""
                 CREATE TABLE IF NOT EXISTS documents (
                     id SERIAL PRIMARY KEY,
                     content TEXT,
                     embedding vector({self.dimension})
+                );
+            """)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    username VARCHAR(50) UNIQUE NOT NULL,
+                    hashed_password VARCHAR(255) NOT NULL
                 );
             """)
             self.conn.commit()
@@ -66,7 +69,6 @@ class SimpleVectorStore:
         if not chunks:
             return
             
-        # بررسی برای جلوگیری از ذخیره تکراری (در صورت تمایل می‌توانید این شرط را بردارید)
         with self.conn.cursor() as cur:
             cur.execute("SELECT COUNT(*) FROM documents;")
             if cur.fetchone()[0] > 0:
@@ -78,7 +80,6 @@ class SimpleVectorStore:
             emb = self.get_embedding(chunk)
             data_to_insert.append((chunk, emb))
             
-        # درج دسته‌جمعی و سریع داده‌ها در دیتابیس
         with self.conn.cursor() as cur:
             execute_values(
                 cur,
@@ -92,7 +93,6 @@ class SimpleVectorStore:
         query_emb = self.get_embedding(query)
         
         with self.conn.cursor() as cur:
-            # استفاده از عملگر <=> برای محاسبه فاصله کسینوسی (Cosine Distance) در pgvector
             cur.execute(
                 """
                 SELECT content FROM documents 
@@ -103,5 +103,4 @@ class SimpleVectorStore:
             )
             rows = cur.fetchall()
             
-        # استخراج متن‌ها از خروجی دیتابیس
         return [row[0] for row in rows]

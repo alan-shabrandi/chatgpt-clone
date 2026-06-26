@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import ChatInput from "./ChatInput";
 import ChatMessage from "./ChatMessage";
@@ -9,6 +10,7 @@ import TypingIndicator from "./TypingIndicator";
 import { Message } from "./types";
 
 export default function ChatArea() {
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -23,13 +25,19 @@ export default function ChatArea() {
   const handleSend = async (text: string) => {
     if (!text.trim() || loading) return;
 
+    // بررسی فلگ ظاهری لاگین؛ اگر کاربر اصلاً وارد نشده باشد، از ارسال درخواست جلوگیری می‌شود
+    const isUserLogged = localStorage.getItem("user_logged_in") === "true";
+    if (!isUserLogged) {
+      router.push("/login");
+      return;
+    }
+
     const userMessage: Message = {
       role: "user",
       content: text,
     };
 
     setMessages((prev) => [...prev, userMessage]);
-
     setLoading(true);
 
     try {
@@ -37,18 +45,28 @@ export default function ChatArea() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          // دیگر نیازی به ارسال دستی هدر Authorization نیست
         },
+        // 👈 بسیار مهم: اجازه ارسال خودکار کوکی‌ها را در بستر CORS صادر می‌کند
+        credentials: "include",
         body: JSON.stringify({
           message: text,
         }),
       });
+
+      // مدیریت منقضی شدن یا نامعتبر بودن کوکی توکن از سمت سرور
+      if (response.status === 401) {
+        localStorage.removeItem("user_logged_in"); // پاک کردن فلگ ظاهری
+        router.push("/login");
+        router.refresh();
+        throw new Error("Session expired. Please log in again.");
+      }
 
       if (!response.ok) {
         throw new Error("Request failed");
       }
 
       const reader = response.body?.getReader();
-
       if (!reader) {
         throw new Error("No response stream");
       }
@@ -65,7 +83,6 @@ export default function ChatArea() {
 
       while (true) {
         const { done, value } = await reader.read();
-
         if (done) break;
 
         const chunk = decoder.decode(value, {
@@ -74,23 +91,21 @@ export default function ChatArea() {
 
         setMessages((prev) => {
           const copy = [...prev];
-
           copy[copy.length - 1] = {
             ...copy[copy.length - 1],
             content: copy[copy.length - 1].content + chunk,
           };
-
           return copy;
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
 
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: "Something went wrong. Please try again.",
+          content: error.message || "Something went wrong. Please try again.",
         },
       ]);
     } finally {
@@ -101,7 +116,6 @@ export default function ChatArea() {
   return (
     <div className="flex h-[calc(100vh-64px)] flex-col">
       {/* Messages */}
-
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto flex max-w-4xl flex-col gap-6 px-6 py-8 pb-40">
           {messages.length === 0 ? (
@@ -121,7 +135,6 @@ export default function ChatArea() {
       </div>
 
       {/* Input */}
-
       <ChatInput loading={loading} onSend={handleSend} />
     </div>
   );
