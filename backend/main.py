@@ -4,21 +4,23 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from routers import auth, chat
-from vector_store import extract_and_chunk_pdf
+from vector_store import SimpleVectorStore
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    pdf_path = "document.pdf"
-    if os.path.exists(pdf_path):
-        print(f"Loading and indexing {pdf_path}...")
-        chunks = extract_and_chunk_pdf(pdf_path)
-        chat.vector_store.add_documents(chunks)
-    else:
-        print(f"Warning: {pdf_path} not found. Please place it in the root directory.")
+    store = SimpleVectorStore()
+    try:
+        print("Initializing database tables...")
+        store.init_db()
+        print("Database initialized successfully.")
+    except Exception as e:
+        print(f"Error initializing database: {e}")
+        
     yield
 
 app = FastAPI(lifespan=lifespan)
 
+# تنظیمات CORS
 ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",

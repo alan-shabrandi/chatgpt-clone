@@ -1,32 +1,24 @@
-import os
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-from openai import OpenAI
 
-from config import OLLAMA_URL
+from config import AI_CLIENT, AI_MODEL_NAME
 from schemas import ChatRequest
 from security import get_current_user_from_cookie
 from vector_store import SimpleVectorStore
 
 router = APIRouter(tags=["Chat"])
-vector_store = SimpleVectorStore()
 
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-print(f"api {OPENROUTER_API_KEY}...")
-
-if OPENROUTER_API_KEY:
-    client = OpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=OPENROUTER_API_KEY
-    )
-    AI_MODEL_NAME = "qwen/qwen-2.5-72b-instruct"
-else:
-    client = OpenAI(base_url=OLLAMA_URL, api_key="ollama")
-    AI_MODEL_NAME = "my-qwen3"
+def get_vector_store():
+    store = SimpleVectorStore()
+    return store
 
 
 @router.post("/chat")
-async def chat(request: ChatRequest, current_user: str = Depends(get_current_user_from_cookie)):
+async def chat(
+    request: ChatRequest, 
+    current_user: str = Depends(get_current_user_from_cookie),
+    vector_store: SimpleVectorStore = Depends(get_vector_store)
+):
     relevant_chunks = vector_store.search(request.message, top_k=3)
     context = "\n---\n".join(relevant_chunks)
     
@@ -37,7 +29,7 @@ async def chat(request: ChatRequest, current_user: str = Depends(get_current_use
         f"Context:\n{context}"
     )
 
-    response = client.chat.completions.create(
+    response = AI_CLIENT.chat.completions.create(
         model=AI_MODEL_NAME,
         messages=[
             {"role": "system", "content": system_prompt},
@@ -48,7 +40,7 @@ async def chat(request: ChatRequest, current_user: str = Depends(get_current_use
 
     def generate():
         for chunk in response:
-            if chunk.choices[0].delta.content:
+            if chunk.choices and chunk.choices[0].delta.content:
                 yield chunk.choices[0].delta.content
 
     return StreamingResponse(generate(), media_type="text/event-stream")
