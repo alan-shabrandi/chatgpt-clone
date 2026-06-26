@@ -38,7 +38,7 @@ export default function RegisterPage() {
       .value;
 
     try {
-      const response = await fetch("http://localhost:8000/register", {
+      const response = await fetch(`${process.env.BACKEND_URL}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         // 👈 اضافه شدن برای همگام‌سازی رفتارهای اشتراک دامنه‌ای کوکی و CORS
