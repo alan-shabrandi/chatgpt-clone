@@ -1,12 +1,21 @@
 "use client";
-import Sidebar from "@/components/Sidebar";
-import ChatArea from "@/components/ChatArea";
+
+import ChatArea from "@/components/chat/ChatArea";
+import Header from "@/components/layout/Header";
+import Sidebar from "@/components/layout/Sidebar";
 
 export default function Home() {
   return (
-    <div className="flex h-screen bg-gray-900 text-white">
-      <Sidebar />
-      <ChatArea />
-    </div>
+    <main className="h-screen bg-background text-foreground">
+      <div className="flex h-full">
+        <Sidebar />
+
+        <section className="flex min-w-0 flex-1 flex-col">
+          <Header />
+
+          <ChatArea />
+        </section>
+      </div>
+    </main>
   );
 }
