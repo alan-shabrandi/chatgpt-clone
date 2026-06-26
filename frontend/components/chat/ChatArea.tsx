@@ -25,7 +25,6 @@ export default function ChatArea() {
   const handleSend = async (text: string) => {
     if (!text.trim() || loading) return;
 
-    // بررسی فلگ ظاهری لاگین؛ اگر کاربر اصلاً وارد نشده باشد، از ارسال درخواست جلوگیری می‌شود
     const isUserLogged = localStorage.getItem("user_logged_in") === "true";
     if (!isUserLogged) {
       router.push("/login");
@@ -45,18 +44,15 @@ export default function ChatArea() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // دیگر نیازی به ارسال دستی هدر Authorization نیست
         },
-        // 👈 بسیار مهم: اجازه ارسال خودکار کوکی‌ها را در بستر CORS صادر می‌کند
         credentials: "include",
         body: JSON.stringify({
           message: text,
         }),
       });
 
-      // مدیریت منقضی شدن یا نامعتبر بودن کوکی توکن از سمت سرور
       if (response.status === 401) {
-        localStorage.removeItem("user_logged_in"); // پاک کردن فلگ ظاهری
+        localStorage.removeItem("user_logged_in");
         router.push("/login");
         router.refresh();
         throw new Error("Session expired. Please log in again.");
