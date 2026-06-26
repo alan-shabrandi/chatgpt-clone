@@ -11,7 +11,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-// ۱. کدهای اصلی را به این کامپوننت منتقل کردیم
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -19,7 +18,6 @@ function LoginContent() {
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // بررسی اینکه آیا کاربر از صفحه ثبت‌نام ریدایرکت شده است یا خیر
   useEffect(() => {
     if (searchParams.get("registered") === "true") {
       setShowSuccess(true);
@@ -29,7 +27,6 @@ function LoginContent() {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      // ورود با گوگل از طریق NextAuth
       await signIn("google", { callbackUrl: "/" });
     } catch (err) {
       setError("Google authentication failed.");
@@ -50,7 +47,6 @@ function LoginContent() {
       .value;
 
     try {
-      // تبدیل داده‌ها به فرمت x-www-form-urlencoded برای مطابقت با OAuth2 در FastAPI
       const formData = new URLSearchParams();
       formData.append("username", username);
       formData.append("password", password);
@@ -61,7 +57,6 @@ function LoginContent() {
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
           },
-          // 👈 بسیار مهم: اجازه دریافت و ثبت کوکی HttpOnly را صادر می‌کند
           credentials: "include",
           body: formData.toString(),
         },
@@ -73,10 +68,8 @@ function LoginContent() {
         throw new Error(data.detail || "Invalid username or password");
       }
 
-      // 👈 تنظیم فلگ ظاهری برای بروزرسانی UI کامپوننت‌های فرانت‌اند (مثل هدر)
       localStorage.setItem("user_logged_in", "true");
 
-      // هدایت کاربر به داشبورد یا صفحه اصلی چت و تازه سازی مسیرها
       router.push("/");
       router.refresh();
     } catch (err: any) {
@@ -104,21 +97,18 @@ function LoginContent() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {/* پیام موفقیت‌آمیز بودن ثبت نام */}
           {showSuccess && (
             <div className="p-3 text-sm text-green-600 bg-green-50 dark:bg-green-950/30 dark:text-green-400 rounded-md text-center font-medium">
               Account created successfully! Please sign in.
             </div>
           )}
 
-          {/* نمایش خطاها */}
           {error && (
             <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md text-center font-medium">
               {error}
             </div>
           )}
 
-          {/* Google Login */}
           <Button
             variant="outline"
             className="w-full"
@@ -128,14 +118,12 @@ function LoginContent() {
             Continue with Google
           </Button>
 
-          {/* Divider */}
           <div className="flex items-center gap-3">
             <div className="h-px flex-1 bg-border" />
             <span className="text-xs text-muted-foreground">OR</span>
             <div className="h-px flex-1 bg-border" />
           </div>
 
-          {/* Username/Email Login Form */}
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label htmlFor="username">Username / Email</Label>
@@ -173,7 +161,6 @@ function LoginContent() {
             </Button>
           </form>
 
-          {/* Link to Register */}
           <p className="text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
             <Link href="/register" className="text-primary hover:underline">
@@ -186,7 +173,6 @@ function LoginContent() {
   );
 }
 
-// ۲. خروجی اصلی کامپوننت را درون Suspense قرار دادیم تا خطای Build برطرف شود
 export default function LoginPage() {
   return (
     <Suspense

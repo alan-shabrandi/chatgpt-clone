@@ -43,7 +43,6 @@ export default function RegisterPage() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          // 👈 اضافه شدن برای همگام‌سازی رفتارهای اشتراک دامنه‌ای کوکی و CORS
           credentials: "include",
           body: JSON.stringify({ username, password }),
         },
