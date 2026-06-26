@@ -40,16 +40,19 @@ export default function ChatArea() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${process.env.BACKEND_URL}/chat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            message: text,
+          }),
         },
-        credentials: "include",
-        body: JSON.stringify({
-          message: text,
-        }),
-      });
+      );
 
       if (response.status === 401) {
         localStorage.removeItem("user_logged_in");

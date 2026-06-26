@@ -54,16 +54,18 @@ function LoginContent() {
       const formData = new URLSearchParams();
       formData.append("username", username);
       formData.append("password", password);
-
-      const response = await fetch(`${process.env.BACKEND_URL}/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          // 👈 بسیار مهم: اجازه دریافت و ثبت کوکی HttpOnly را صادر می‌کند
+          credentials: "include",
+          body: formData.toString(),
         },
-        // 👈 بسیار مهم: اجازه دریافت و ثبت کوکی HttpOnly را صادر می‌کند
-        credentials: "include",
-        body: formData.toString(),
-      });
+      );
 
       const data = await response.json();
 
