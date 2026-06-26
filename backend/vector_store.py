@@ -1,11 +1,16 @@
-import numpy as np
-import faiss
+import os
+import psycopg2
+from psycopg2.extras import execute_values
 from pypdf import PdfReader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from openai import OpenAI
 
+# خواندن متغیرهای محیطی از داکر
+OLLAMA_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://myuser:mypassword@localhost:5432/mydb")
+
 ollama_client = OpenAI(
-    base_url="http://localhost:11434/v1",
+    base_url=OLLAMA_URL,
     api_key="ollama",
 )
 
@@ -28,10 +33,27 @@ def extract_and_chunk_pdf(file_path: str, chunk_size: int = 600, chunk_overlap: 
     chunks = text_splitter.split_text(full_text)
     return chunks
 
+
 class SimpleVectorStore:
     def __init__(self, dimension: int = 768):
-        self.index = faiss.IndexFlatL2(dimension)
-        self.documents = []
+        self.dimension = dimension
+        # اتصال به دیتابیس PostgreSQL
+        self.conn = psycopg2.connect(DATABASE_URL)
+        self.create_table()
+
+    def create_table(self):
+        with self.conn.cursor() as cur:
+            # فعال‌سازی افزونه pgvector در دیتابیس
+            cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+            # ساخت جدول ذخیره‌سازی متن و وکتور (اگر از قبل نباشد)
+            cur.execute(f"""
+                CREATE TABLE IF NOT EXISTS documents (
+                    id SERIAL PRIMARY KEY,
+                    content TEXT,
+                    embedding vector({self.dimension})
+                );
+            """)
+            self.conn.commit()
 
     def get_embedding(self, text: str) -> list:
         response = ollama_client.embeddings.create(
@@ -44,22 +66,42 @@ class SimpleVectorStore:
         if not chunks:
             return
             
-        embeddings = []
+        # بررسی برای جلوگیری از ذخیره تکراری (در صورت تمایل می‌توانید این شرط را بردارید)
+        with self.conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM documents;")
+            if cur.fetchone()[0] > 0:
+                print("Database already indexed. Skipping...")
+                return
+
+        data_to_insert = []
         for chunk in chunks:
             emb = self.get_embedding(chunk)
-            embeddings.append(emb)
-            self.documents.append(chunk)
+            data_to_insert.append((chunk, emb))
             
-        np_embeddings = np.array(embeddings).astype('float32')
-        self.index.add(np_embeddings)
-        print(f"Successfully indexed {len(chunks)} chunks.")
+        # درج دسته‌جمعی و سریع داده‌ها در دیتابیس
+        with self.conn.cursor() as cur:
+            execute_values(
+                cur,
+                "INSERT INTO documents (content, embedding) VALUES %s",
+                data_to_insert
+            )
+            self.conn.commit()
+        print(f"Successfully indexed {len(chunks)} chunks into PostgreSQL.")
 
     def search(self, query: str, top_k: int = 3):
-        query_emb = np.array([self.get_embedding(query)]).astype('float32')
-        distances, indices = self.index.search(query_emb, top_k)
+        query_emb = self.get_embedding(query)
         
-        results = []
-        for idx in indices[0]:
-            if idx != -1 and idx < len(self.documents):
-                results.append(self.documents[idx])
-        return results
+        with self.conn.cursor() as cur:
+            # استفاده از عملگر <=> برای محاسبه فاصله کسینوسی (Cosine Distance) در pgvector
+            cur.execute(
+                """
+                SELECT content FROM documents 
+                ORDER BY embedding <=> %s::vector 
+                LIMIT %s;
+                """,
+                (query_emb, top_k)
+            )
+            rows = cur.fetchall()
+            
+        # استخراج متن‌ها از خروجی دیتابیس
+        return [row[0] for row in rows]

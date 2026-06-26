@@ -4,16 +4,21 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from openai import OpenAI
-
-# وارد کردن توابعی که در مراحل قبل ساختیم
 from vector_store import extract_and_chunk_pdf, SimpleVectorStore
 
+# خواندن آدرس Ollama و دیتابیس از متغیرهای محیطی
+OLLAMA_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://myuser:mypassword@localhost:5432/mydb")
+
 client = OpenAI(
-    base_url="http://localhost:11434/v1",
+    base_url=OLLAMA_URL,
     api_key="ollama",
 )
 
 app = FastAPI()
+
+# برای اتصال به دیتابیس در آینده می‌توانید از DATABASE_URL استفاده کنید
+# به عنوان مثال با SQLAlchemy یا asyncpg
 
 app.add_middleware(
     CORSMiddleware,
@@ -41,7 +46,6 @@ class ChatRequest(BaseModel):
 @app.post("/chat")
 async def chat(request: ChatRequest):
     relevant_chunks = vector_store.search(request.message, top_k=3)
-    
     context = "\n---\n".join(relevant_chunks)
     
     system_prompt = (
@@ -70,6 +74,4 @@ async def chat(request: ChatRequest):
         media_type="text/event-stream"
     )
     
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+# خطوط پایانی uvicorn.run حذف شدند چون داکر خودش برنامه را اجرا می‌کند.

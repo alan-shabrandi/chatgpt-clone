@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  db:
+    image: pgvector/pgvector:pg15
+    container_name: fastapi_db
+    restart: always
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/var/lib/postgresql/data
+  web:
+    build: .
+    container_name: fastapi_app
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://myuser:mypassword@db:5432/mydb
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434/v1
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
