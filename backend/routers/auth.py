@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.security import OAuth2PasswordRequestForm
 import psycopg2
-
+import os
 from config import COOKIE_NAME, ACCESS_TOKEN_EXPIRE_MINUTES
 from database import get_db
 from schemas import UserRegister
@@ -35,14 +35,14 @@ async def login(response: Response, form_data: OAuth2PasswordRequestForm = Depen
         raise HTTPException(status_code=400, detail="Incorrect username or password")
         
     access_token = create_access_token(data={"sub": form_data.username})
-    
+    IS_PRODUCTION = os.getenv("ENV") == "production"
     response.set_cookie(
         key=COOKIE_NAME,
         value=access_token,
         httponly=True,
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        samesite="none",
-        secure=True,
+        samesite="none" if IS_PRODUCTION else "lax",
+        secure=True if IS_PRODUCTION else False,
         path="/"
     )
     return {"message": "Login successful"}
