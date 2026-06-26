@@ -22,7 +22,7 @@ app = FastAPI(lifespan=lifespan)
 ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://chatgpt-clone-hazel-nine.vercel.app/"
+    "https://chatgpt-clone-hazel-nine.vercel.app"
 ]
 
 FRONTEND_URL = os.getenv("FRONTEND_URL")
