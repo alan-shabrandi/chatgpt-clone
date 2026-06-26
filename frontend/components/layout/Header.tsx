@@ -15,7 +15,7 @@ export default function Header() {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        await fetch(`${process.env.BACKEND_URL}/auth/google`, {
+        await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/google`, {
           method: "OPTIONS",
           credentials: "include",
         });
@@ -33,10 +33,13 @@ export default function Header() {
 
   const handleSignOut = async () => {
     try {
-      const response = await fetch(`${process.env.BACKEND_URL}/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/logout`,
+        {
+          method: "POST",
+          credentials: "include",
+        },
+      );
 
       if (response.ok) {
         localStorage.removeItem("user_logged_in");
