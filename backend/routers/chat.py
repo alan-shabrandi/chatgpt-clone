@@ -11,19 +11,15 @@ from vector_store import SimpleVectorStore
 router = APIRouter(tags=["Chat"])
 vector_store = SimpleVectorStore()
 
-# ۱. بررسی وجود کلید ابری OpenRouter
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 if OPENROUTER_API_KEY:
-    # اتصال به کلاینت ابری ابری و رایگان
     client = OpenAI(
         base_url="https://openrouter.ai/api/v1",
         api_key=OPENROUTER_API_KEY
     )
-    # مدل پیشنهادی با کیفیت و پرسرعت Qwen 2.5 نسخه‌ی 72 میلیارد پارامتری
     AI_MODEL_NAME = "qwen/qwen-2.5-72b-instruct"
 else:
-    # بازگشت به تنظیمات Ollama لوکال در صورت عدم وجود کلید ابری
     client = OpenAI(base_url=OLLAMA_URL, api_key="ollama")
     AI_MODEL_NAME = "my-qwen3"
 
@@ -40,7 +36,6 @@ async def chat(request: ChatRequest, current_user: str = Depends(get_current_use
         f"Context:\n{context}"
     )
 
-    # ۲. استفاده از متغیر داینامیک AI_MODEL_NAME برای مدل
     response = client.chat.completions.create(
         model=AI_MODEL_NAME,
         messages=[

@@ -43,7 +43,6 @@ async def login(response: Response, form_data: OAuth2PasswordRequestForm = Depen
         value=access_token,
         httponly=True,
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        expires=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         samesite="lax",
         secure=False,
         path="/"
@@ -83,7 +82,6 @@ async def auth_google(response: Response, auth_data: GoogleAuthRequest):
         value=access_token,
         httponly=True,
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        expires=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         samesite="lax",
         secure=False,
         path="/"
