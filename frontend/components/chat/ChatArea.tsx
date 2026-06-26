@@ -8,13 +8,47 @@ import ChatMessage from "./ChatMessage";
 import EmptyState from "./EmptyState";
 import TypingIndicator from "./TypingIndicator";
 import { Message } from "./types";
+interface ChatAreaProps {
+  sessionId: string;
+}
 
-export default function ChatArea() {
+export default function ChatArea({ sessionId }: ChatAreaProps) {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchChatHistory = async () => {
+      const isUserLogged = localStorage.getItem("user_logged_in") === "true";
+      if (!isUserLogged || !sessionId || sessionId === "undefined") return;
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/chat/history?session_id=${sessionId}`,
+          {
+            method: "GET",
+            credentials: "include",
+          },
+        );
+
+        if (response.status === 401) {
+          localStorage.removeItem("user_logged_in");
+          router.push("/login");
+          return;
+        }
+
+        if (response.ok) {
+          const data = await response.json();
+          setMessages(data.history || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch chat history:", error);
+      }
+    };
+
+    fetchChatHistory();
+  }, [sessionId, router]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -50,6 +84,7 @@ export default function ChatArea() {
           credentials: "include",
           body: JSON.stringify({
             message: text,
+            session_id: sessionId,
           }),
         },
       );
@@ -114,7 +149,6 @@ export default function ChatArea() {
 
   return (
     <div className="flex h-[calc(100vh-64px)] flex-col">
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto flex max-w-4xl flex-col gap-6 px-6 py-8 pb-40">
           {messages.length === 0 ? (
@@ -133,7 +167,6 @@ export default function ChatArea() {
         </div>
       </div>
 
-      {/* Input */}
       <ChatInput loading={loading} onSend={handleSend} />
     </div>
   );

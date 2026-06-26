@@ -27,7 +27,11 @@
       "includeLogsCount": 50
     }
   },
-  "include": ["routers/chat.py", "./vector_store.py"],
+  "include": [
+    "./frontend/components/chat/ChatArea.tsx",
+    "./frontend/components/layout/Sidebar.tsx",
+    "./frontend/app/page.tsx"
+  ],
   "ignore": {
     "useGitignore": true,
     "useDotIgnore": true,

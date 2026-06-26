@@ -45,6 +45,18 @@ class SimpleVectorStore:
                         hashed_password VARCHAR(255) NOT NULL
                     );
                 """)
+                
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS chat_messages (
+                        id SERIAL PRIMARY KEY,
+                        session_id UUID NOT NULL,
+                        username VARCHAR(50) NOT NULL,
+                        role VARCHAR(10) NOT NULL, -- 'user' یا 'assistant'
+                        content TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+                    );
+                """)
             conn.commit()
 
     def get_embedding(self, text: str) -> list[float]:
@@ -93,3 +105,46 @@ class SimpleVectorStore:
                 )
                 rows = cur.fetchall()
         return [row[0] for row in rows]
+    
+    def save_message(self, session_id: str, username: str, role: str, content: str):
+        with self._get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO chat_messages (session_id, username, role, content)
+                    VALUES (%s, %s, %s, %s);
+                    """,
+                    (session_id, username, role, content)
+                )
+            conn.commit()
+            
+    def get_chat_history(self, session_id: str, username: str):
+        with self._get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT role, content, created_at 
+                    FROM chat_messages 
+                    WHERE session_id = %s AND username = %s 
+                    ORDER BY created_at ASC;
+                    """,
+                    (session_id, username)
+                )
+                rows = cur.fetchall()
+        return [{"role": row[0], "content": row[1], "created_at": row[2].isoformat()} for row in rows]
+
+    def get_user_sessions(self, username: str):
+        with self._get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT DISTINCT ON (session_id) session_id, content, created_at
+                    FROM chat_messages
+                    WHERE username = %s AND role = 'user'
+                    ORDER BY session_id, created_at ASC;
+                    """,
+                    (username,)
+                )
+                rows = cur.fetchall()
+        rows.sort(key=lambda x: x[2], reverse=True)
+        return [{"session_id": str(row[0]), "title": row[1]} for row in rows]

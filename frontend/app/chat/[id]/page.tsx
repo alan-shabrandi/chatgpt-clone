@@ -1,18 +1,13 @@
 "use client";
 
+import { useParams } from "next/navigation";
 import ChatArea from "@/components/chat/ChatArea";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
-export default function Home() {
-  const router = useRouter();
-
-  useEffect(() => {
-    const newChatId = crypto.randomUUID();
-    router.replace(`/chat/${newChatId}`);
-  }, [router]);
+export default function ChatPage() {
+  const params = useParams();
+  const chatId = params.id as string;
 
   return (
     <main className="h-screen bg-background text-foreground">
@@ -21,8 +16,7 @@ export default function Home() {
 
         <section className="flex min-w-0 flex-1 flex-col">
           <Header />
-
-          <ChatArea />
+          <ChatArea sessionId={chatId} />
         </section>
       </div>
     </main>
