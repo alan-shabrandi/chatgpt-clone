@@ -3,6 +3,7 @@
 import { Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function Header() {
   return (
@@ -18,7 +19,9 @@ export default function Header() {
       </div>
 
       <div className="flex items-center gap-3">
-        <Button size="sm">Login</Button>
+        <Button>
+          <Link href="/login">Login</Link>
+        </Button>
       </div>
     </header>
   );
