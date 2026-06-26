@@ -1,6 +1,5 @@
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
-import type { NextAuthConfig } from "next-auth";
 
 export const authConfig = {
   providers: [
@@ -8,7 +7,6 @@ export const authConfig = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
-
     Credentials({
       name: "credentials",
       credentials: {
@@ -26,12 +24,10 @@ export const authConfig = {
       },
     }),
   ],
-
   pages: {
     signIn: "/login",
   },
-
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as const,
   },
-} satisfies NextAuthConfig;
+};
