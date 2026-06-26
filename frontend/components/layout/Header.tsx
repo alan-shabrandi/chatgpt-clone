@@ -15,10 +15,6 @@ export default function Header() {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/google`, {
-          method: "OPTIONS",
-          credentials: "include",
-        });
         const userLoggedFlag = localStorage.getItem("user_logged_in");
         setIsLoggedIn(userLoggedFlag === "true");
       } catch (err) {

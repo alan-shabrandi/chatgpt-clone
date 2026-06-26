@@ -1,26 +1,38 @@
-import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
+import type { NextAuthOptions } from "next-auth";
 
-export const authConfig = {
+export const authConfig: NextAuthOptions = {
   providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
     Credentials({
       name: "credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
+        username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email) return null;
+        if (!credentials?.username || !credentials?.password) return null;
 
-        return {
-          id: "1",
-          email: credentials.email as string,
-          name: "User",
-        };
+        try {
+          const formData = new URLSearchParams();
+          formData.append("username", credentials.username);
+          formData.append("password", credentials.password);
+
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login`, {
+            method: "POST",
+            body: formData,
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+          });
+
+          if (!res.ok) return null;
+          return {
+            id: credentials.username,
+            name: credentials.username,
+          };
+        } catch (error) {
+          return null;
+        }
       },
     }),
   ],
@@ -28,6 +40,6 @@ export const authConfig = {
     signIn: "/login",
   },
   session: {
-    strategy: "jwt" as const,
+    strategy: "jwt",
   },
 };

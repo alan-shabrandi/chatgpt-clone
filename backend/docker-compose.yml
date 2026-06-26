@@ -24,7 +24,6 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
     depends_on:
       - db
