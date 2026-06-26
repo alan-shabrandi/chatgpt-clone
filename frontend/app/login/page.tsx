@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Sparkles, Loader2 } from "lucide-react";
-import { signIn } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -24,16 +23,6 @@ function LoginContent() {
     }
   }, [searchParams]);
 
-  const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    try {
-      await signIn("google", { callbackUrl: "/" });
-    } catch (err) {
-      setError("Google authentication failed.");
-      setIsLoading(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
@@ -50,6 +39,7 @@ function LoginContent() {
       const formData = new URLSearchParams();
       formData.append("username", username);
       formData.append("password", password);
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/login`,
         {
@@ -109,21 +99,6 @@ function LoginContent() {
             </div>
           )}
 
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={handleGoogleLogin}
-            disabled={isLoading}
-          >
-            Continue with Google
-          </Button>
-
-          <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-xs text-muted-foreground">OR</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label htmlFor="username">Username / Email</Label>
@@ -131,7 +106,7 @@ function LoginContent() {
                 id="username"
                 name="username"
                 type="text"
-                placeholder="johndoe@example.com"
+                placeholder="johndoe"
                 required
                 disabled={isLoading}
               />

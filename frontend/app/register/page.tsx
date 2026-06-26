@@ -3,28 +3,17 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Sparkles, Loader2 } from "lucide-react";
-import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    try {
-      await signIn("google", { callbackUrl: "/" });
-    } catch (err) {
-      setError("Google sign in failed.");
-      setIsLoading(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -81,21 +70,6 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={handleGoogleSignIn}
-            disabled={isLoading}
-          >
-            Continue with Google
-          </Button>
-
-          <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-xs text-muted-foreground">OR</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label htmlFor="username">Username / Email</Label>
@@ -103,7 +77,7 @@ export default function RegisterPage() {
                 id="username"
                 name="username"
                 type="text"
-                placeholder="johndoe@example.com"
+                placeholder="johndoe"
                 required
                 disabled={isLoading}
               />
