@@ -8,12 +8,12 @@ export default function Home() {
   return (
     <main className="h-screen bg-background text-foreground">
       <div className="flex h-full">
-        {/* <Sidebar /> */}
+        <Sidebar />
 
         <section className="flex min-w-0 flex-1 flex-col">
           <Header />
 
-          {/* <ChatArea /> */}
+          <ChatArea />
         </section>
       </div>
     </main>
