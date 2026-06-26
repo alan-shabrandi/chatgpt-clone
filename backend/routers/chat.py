@@ -12,6 +12,7 @@ router = APIRouter(tags=["Chat"])
 vector_store = SimpleVectorStore()
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+print(f"api {OPENROUTER_API_KEY}...")
 
 if OPENROUTER_API_KEY:
     client = OpenAI(
